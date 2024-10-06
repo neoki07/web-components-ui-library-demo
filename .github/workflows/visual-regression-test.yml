@@ -156,3 +156,4 @@ jobs:
         with:
           name: vrt-report
           path: .reg
+          include-hidden-files: true
