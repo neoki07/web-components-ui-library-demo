@@ -144,5 +144,9 @@ jobs:
       - name: Install node modules
         uses: ./.github/actions/install-node-modules
 
+      - name: Checkout PR branch
+        run: |
+          git checkout ${GITHUB_HEAD_REF#refs/heads/} || git checkout -b ${GITHUB_HEAD_REF#refs/heads/} && git pull
+
       - name: Run visual regression tests
         run: npm run test:vrt
