@@ -1,0 +1,140 @@
+name: Visual regression tests
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  take-expected-screenshots:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Get commit hash
+        id: get-commit-hash
+        run: echo "hash=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Cache expected screenshots
+        uses: actions/cache@v4
+        id: cache-expected-screenshots
+        env:
+          cache-name: cache-expected-screenshots
+        with:
+          path: .reg/
+          key: ${{ runner.os }}-test-${{ env.cache-name }}-${{ steps.get-commit-hash.outputs.hash }}
+
+      - if: ${{ steps.cache-expected-screenshots.outputs.cache-hit != 'true' }}
+        name: Install node modules
+        uses: ./.github/actions/install-node-modules
+
+      - if: ${{ steps.cache-expected-screenshots.outputs.cache-hit != 'true' }}
+        name: Build Storybook
+        uses: ./.github/actions/build-storybook
+
+      - if: ${{ steps.cache-expected-screenshots.outputs.cache-hit != 'true' }}
+        name: Take screenshots
+        run: npm run storybook:screenshot
+
+      - name: Upload screenshots
+        uses: actions/upload-artifact@v4
+        with:
+          name: expected-screenshots
+          path: __screenshots__
+          retention-days: 1
+
+  take-actual-screenshots:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Checkout PR branch
+        run: |
+          git checkout ${GITHUB_HEAD_REF#refs/heads/} || git checkout -b ${GITHUB_HEAD_REF#refs/heads/} && git pull
+
+      - name: Get commit hash
+        id: get-commit-hash
+        run: echo "hash=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Cache actual screenshots
+        uses: actions/cache@v4
+        id: cache-actual-screenshots
+        env:
+          cache-name: cache-actual-screenshots
+        with:
+          path: .reg/
+          key: ${{ runner.os }}-test-${{ env.cache-name }}-${{ steps.get-commit-hash.outputs.hash }}
+
+      - if: ${{ steps.cache-actual-screenshots.outputs.cache-hit != 'true' }}
+        name: Install node modules
+        uses: ./.github/actions/install-node-modules
+
+      - if: ${{ steps.cache-actual-screenshots.outputs.cache-hit != 'true' }}
+        name: Build Storybook
+        uses: ./.github/actions/build-storybook
+
+      - if: ${{ steps.cache-actual-screenshots.outputs.cache-hit != 'true' }}
+        name: Take screenshots
+        run: npm run storybook:screenshot
+
+      - name: upload screenshots
+        uses: actions/upload-artifact@v4
+        with:
+          name: actual-screenshots
+          path: __screenshots__
+          retention-days: 1
+
+  run_reg_suit:
+    needs:
+      - take-expected-screenshots
+      - take-actual-screenshots
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get commit hash
+        id: get-commit-hash
+        run: echo "hash=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Restore expected screenshots
+        uses: actions/cache@v4
+        id: cache-expected-screenshots
+        env:
+          cache-name: cache-expected-screenshots
+        with:
+          path: .reg/
+          key: ${{ runner.os }}-test-${{ env.cache-name }}-${{ steps.get-commit-hash.outputs.hash }}
+
+      - if: ${{ steps.cache-expected-screenshots.outputs.cache-hit != 'true' }}
+        name: Download expected screenshots
+        uses: actions/download-artifact@v4
+        with:
+          name: expected-screenshots
+          path: __screenshots__
+
+      - if: ${{ steps.cache-expected-screenshots.outputs.cache-hit != 'true' }}
+        name: Set up expected screenshots
+        run: |
+          rm -rf .reg/expected/
+          mkdir -p .reg/expected
+          mv -f __screenshots__/* .reg/expected/
+          ls -l .reg/
+
+      - name: Download actual screenshots
+        uses: actions/download-artifact@v4
+        with:
+          name: actual-screenshots
+          path: __screenshots__
+
+      - name: Install node modules
+        uses: ./.github/actions/install-node-modules
+
+      - name: Run visual regression tests
+        run: npm run test:vrt
