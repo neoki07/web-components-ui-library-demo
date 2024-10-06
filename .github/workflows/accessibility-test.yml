@@ -15,7 +15,7 @@ jobs:
         uses: ./.github/actions/install-playwright
 
       - name: Build Storybook
-        run: npm run build-storybook --quiet
+        uses: ./.github/actions/build-storybook
 
       - name: Run accessibility tests
         run: |

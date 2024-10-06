@@ -1,0 +1,23 @@
+name: "Build Storybook"
+description: "Build Storybook"
+runs:
+  using: "composite"
+  steps:
+    - name: Get commit hash
+      id: get-commit-hash
+      run: echo "hash=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+      shell: bash
+
+    - name: Cache Storybook
+      uses: actions/cache@v4
+      id: cache-storybook
+      env:
+        cache-name: cache-storybook
+      with:
+        path: storybook-static/
+        key: ${{ runner.os }}-test-${{ env.cache-name }}-${{ steps.get-commit-hash.outputs.hash  }}
+
+    - if: ${{ steps.cache-storybook.outputs.cache-hit != 'true' }}
+      name: Build Storybook
+      run: npm run build-storybook --quiet
+      shell: bash
