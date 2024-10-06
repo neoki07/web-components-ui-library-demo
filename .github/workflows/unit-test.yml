@@ -15,4 +15,4 @@ jobs:
         uses: ./.github/actions/install-playwright
 
       - name: Test
-        run: npm test
+        run: npm test:unit
