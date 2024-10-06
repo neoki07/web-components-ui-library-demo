@@ -19,5 +19,5 @@ runs:
 
     - if: ${{ steps.cache-storybook.outputs.cache-hit != 'true' }}
       name: Build Storybook
-      run: npm run build-storybook --quiet
+      run: npm run storybook:build --quiet
       shell: bash
