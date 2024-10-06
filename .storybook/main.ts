@@ -7,6 +7,7 @@ const config: StorybookConfig = {
     "@storybook/addon-essentials",
     "@storybook/addon-a11y",
     "@chromatic-com/storybook",
+    "storycap",
   ],
   framework: {
     name: "@storybook/web-components-vite",
