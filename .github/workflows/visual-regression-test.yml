@@ -32,6 +32,10 @@ jobs:
         uses: ./.github/actions/install-node-modules
 
       - if: ${{ steps.cache-expected-screenshots.outputs.cache-hit != 'true' }}
+        name: Install Chromium
+        run: node node_modules/puppeteer/install.mjs
+
+      - if: ${{ steps.cache-expected-screenshots.outputs.cache-hit != 'true' }}
         name: Build Storybook
         uses: ./.github/actions/build-storybook
 
@@ -73,6 +77,10 @@ jobs:
       - if: ${{ steps.cache-actual-screenshots.outputs.cache-hit != 'true' }}
         name: Install node modules
         uses: ./.github/actions/install-node-modules
+
+      - if: ${{ steps.cache-actual-screenshots.outputs.cache-hit != 'true' }}
+        name: Install Chromium
+        run: node node_modules/puppeteer/install.mjs
 
       - if: ${{ steps.cache-actual-screenshots.outputs.cache-hit != 'true' }}
         name: Build Storybook
