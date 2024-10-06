@@ -14,5 +14,5 @@ jobs:
       - name: Install Playwright
         uses: ./.github/actions/install-playwright
 
-      - name: Test
+      - name: Run unit tests
         run: npm test:unit
